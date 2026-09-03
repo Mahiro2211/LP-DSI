@@ -12,31 +12,6 @@ on the RT-DETRv4-S detector (HGNetv2-B0 + HybridEncoder + D-FINE decoder).
 > and [`configs/rtv4_s_ssdd_lp.yml`](./configs/rtv4_s_ssdd_lp.yml) (SSDD
 > generalization). Everything else in `configs/` is their inheritance chain.
 
-## Method
-
-1. **CROMA teacher** (teacher side): the frozen distillation teacher is
-   [CROMA](https://arxiv.org/abs/2311.00566) (NeurIPS 2023), a foundation model
-   pretrained on Sentinel-1/2 SAR–optical pairs, replacing the natural-image
-   DINOv3 teacher of the RT-DETRv4 baseline. The SAR encoder (ViT-B, patch 8)
-   sees the input avg-pooled 4x, so the teacher grid stays 1:1 with the
-   student's stride-32 F5 feature; ALiBi position biases are recomputed
-   dynamically for multi-scale training (`engine/rtv4/croma_teacher.py`).
-2. **LP-DSI** (loss side): only the low-frequency band of the student-projected
-   and teacher feature maps is aligned — a 2x2 average pooling (exactly the
-   Haar LL sub-band) followed by the per-position cosine loss. Speckle- and
-   texture-dominated high-frequency responses are ignored. Zero extra
-   hyperparameters (`distill_mode: lp`,
-   `engine/rtv4/distill_modules.py::low_pass_alignment_loss`).
-3. **GAM adaptive distill weight** (inherited from the RT-DETRv4 baseline):
-   the `loss_distill` weight is retuned every epoch so the encoder-transformer
-   gradient share stays at rho +/- delta percent, plus stage-2 EMA-search
-   rollback gating (`engine/solver/det_solver.py`).
-
-Design details and the math behind the LL == AvgPool equivalence: see
-[docs/innovations.md](./docs/innovations.md).
-
----
-
 ## 1. Getting Started
 
 ### 1.1 Environment setup
