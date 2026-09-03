@@ -3,8 +3,7 @@
 ---
 
 Official implementation of the conference paper: **low-pass feature alignment
-distillation (LP-DSI) on a CROMA SAR teacher** for SAR ship detection, built
-on the RT-DETRv4-S detector (HGNetv2-B0 + HybridEncoder + D-FINE decoder).
+distillation (LP-DSI) on a CROMA SAR teacher** for SAR ship detection
 
 
 ## 1. Getting Started
