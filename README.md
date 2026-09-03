@@ -6,11 +6,6 @@ Official implementation of the conference paper: **low-pass feature alignment
 distillation (LP-DSI) on a CROMA SAR teacher** for SAR ship detection, built
 on the RT-DETRv4-S detector (HGNetv2-B0 + HybridEncoder + D-FINE decoder).
 
-> The paper's three experiment configs are
-> [`configs/rtv4_s_hrsid_lp.yml`](./configs/rtv4_s_hrsid_lp.yml) (main, HRSID),
-> [`configs/rtv4_s_ship_lp.yml`](./configs/rtv4_s_ship_lp.yml) (ship_dataset_v0)
-> and [`configs/rtv4_s_ssdd_lp.yml`](./configs/rtv4_s_ssdd_lp.yml) (SSDD
-> generalization). Everything else in `configs/` is their inheritance chain.
 
 ## 1. Getting Started
 
@@ -116,36 +111,10 @@ ship_dataset_v0 already use 0-based ids and need no conversion.
 interrupted):
 
 ```shell
-bash tools/train_sar_ablation.sh hrsid   # one dataset: hrsid | ship | ssdd
-bash tools/train_sar_ablation.sh all     # all three, sequentially
+python train.py -c ./configs/rtv4_s_hrsid_lp.yml --use-amp --seed=3401
+python train.py -c ./configs/rtv4_s_ssdd_lp.yml --use-amp --seed=3401
+python train.py -c ./configs/rtv4_s_ship_lp.yml --use-amp --seed=3401
 ```
-
-**Directly with torchrun** (single GPU):
-
-```shell
-torchrun --master_port=7777 --nproc_per_node=1 train.py \
-    -c configs/rtv4_s_hrsid_lp.yml --use-amp --seed=0
-```
-
-Multi-GPU (e.g. 4 GPUs; `total_batch_size: 32` in
-[configs/base/dataloader.yml](./configs/base/dataloader.yml) is split across
-ranks automatically):
-
-```shell
-CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=7777 --nproc_per_node=4 train.py \
-    -c configs/rtv4_s_hrsid_lp.yml --use-amp --seed=0
-```
-
-Replace `hrsid` with `ship` or `ssdd` for the other two datasets. Outputs
-(weights + `log.txt` + eval stats) land in the config's `output_dir`, e.g.
-`./outputs/rtv4_s_hrsid_lp/`:
-
-| File | Content |
-|---|---|
-| `last.pth` | rolling checkpoint for `--resume` |
-| `best_stg1.pth` / `best_stg2.pth` | best weights before / after the EMA restart (ranked by AP50) |
-| `log.txt` | per-epoch train/test metrics (JSON lines) |
-| `eval/` | COCOeval result dumps |
 
 Useful flags:
 
@@ -160,38 +129,8 @@ Useful flags:
 | `--no-ckpt` | skip all `.pth` writes (metrics still logged) |
 | `-u key=value` | override any config entry, e.g. `-u total_batch_size=16` |
 
-### 2.2 Evaluation only
 
-```shell
-torchrun --master_port=7777 --nproc_per_node=1 train.py \
-    -c configs/rtv4_s_hrsid_lp.yml --test-only -r outputs/rtv4_s_hrsid_lp/best_stg2.pth
-```
-
-For deployment, extract the EMA weights from a checkpoint:
-
-```shell
-python tools/reference/convert_weight.py outputs/rtv4_s_hrsid_lp
-```
-
-### 2.3 Smoke tests (recommended before the first real run)
-
-```shell
-# pure-function checks: cosine / low-pass losses, odd token grids (no downloads)
-python tools/smoke_test_model.py --ops
-
-# data pipeline: loads each config, pulls a batch, checks the labels
-python tools/dataset/smoke_test_hrsid_ssdd.py     # requires HRSID + SSDD on disk
-python tools/dataset/smoke_test_ship_v0.py        # requires ship_dataset_v0
-
-# model level: teacher + forward + loss + backward + inference
-# (requires pretrain/CROMA_base.pt)
-python tools/smoke_test_model.py configs/rtv4_s_hrsid_lp.yml
-
-# training-loop level: AMP boundaries + GAM gradient probe
-python tools/smoke_test_train_step.py configs/rtv4_s_hrsid_lp.yml
-```
-
-### 2.4 Inference & deployment
+### 2.2 Inference & deployment
 
 ```shell
 # PyTorch inference / visualization
@@ -213,32 +152,9 @@ python tools/benchmark/get_info.py -c configs/rtv4_s_hrsid_lp.yml
 
 ---
 
-## 3. Config inheritance chain
 
-```
-rtv4_s_{hrsid,ship,ssdd}_lp.yml          # distill_mode: lp  (+ EMA-search gating, hrsid/ssdd)
-└── rtv4_hgnetv2_s_{hrsid,ship,ssdd}_croma.yml   # CROMA teacher, GAM, optimizer, epoch plan
-    ├── dfine/dfine_hgnetv2_s_{hrsid,ship_v0,ssdd}.yml   # HGNetv2-B0 model shape
-    │   ├── dataset/{hrsid,ship_v0,ssdd}_detection.yml   # dataset paths
-    │   ├── runtime.yml / base/{dataloader,optimizer}.yml
-    │   └── base/dfine_hgnetv2.yml                      # model skeleton + criterion defaults
-    └── base/rtv4.yml                                   # dense o2o aug, flatcosine, mal losses
-```
 
-## 4. Citation
-
-If you find this work helpful, please consider citing:
-
-```bibtex
-@article{liao2025rtdetrv4,
-  title={RT-DETRv4: Painlessly Furthering Real-Time Object Detection with Vision Foundation Models},
-  author={Zijun Liao and Yian Zhao and Xin Shan and Yu Yan and Chang Liu and Lei Lu and Xiangyang Ji and Jie Chen},
-  journal={arXiv preprint arXiv:2510.25257},
-  year={2025}
-}
-```
-
-## 5. Acknowledgement
+## 3. Acknowledgement
 
 Our work is built upon [RT-DETR](https://github.com/lyuwenyu/RT-DETR),
 [D-FINE](https://github.com/Peterande/D-FINE), [DEIM](https://github.com/Intellindust-AI-Lab/DEIM),

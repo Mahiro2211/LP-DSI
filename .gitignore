@@ -36,6 +36,9 @@ wandb/
 *.tfevents.*
 *.log
 
+# ---- Internal design notes (kept locally, not in repo) ----
+docs/
+
 # ---- Datasets (place locally, not in repo) ----
 data/
 datasets/
