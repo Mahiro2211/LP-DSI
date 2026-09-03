@@ -1,0 +1,57 @@
+__include__: [
+  './dfine/dfine_hgnetv2_s_ssdd.yml',
+  './base/rtv4.yml'
+]
+
+output_dir: ./outputs/rtv4_hgnetv2_s_ssdd_croma
+
+# CROMA (NeurIPS 2023, arXiv 2311.00566) as the frozen distillation teacher:
+# a SAR-pretrained foundation model instead of natural-image DINOv3.
+# Weights: wget https://huggingface.co/antofuller/CROMA/resolve/main/CROMA_base.pt -O pretrain/CROMA_base.pt
+# (HF blocked? use the hf-mirror.com mirror with the same path.)
+teacher_model:
+  type: "CROMATeacherModel"
+  croma_weights_path: pretrain/CROMA_base.pt
+  croma_size: "base"
+
+HybridEncoder:
+  distill_teacher_dim: 768
+
+RTv4Criterion:
+  weight_dict:
+    loss_distill: 8  # origin 5, up-to-now best 3
+  distill_adaptive_params:
+    enabled: True
+    rho: 11
+    delta: 1
+    default_weight: 20
+
+optimizer:
+  type: AdamW
+  params:
+    -
+      params: '^(?=.*backbone)(?!.*bn).*$'
+      lr: 0.0002 # 0.0002
+    -
+      params: '^(?=.*(?:norm|bn)).*$'
+      weight_decay: 0.
+
+  lr: 0.0002
+  betas: [0.9, 0.999]
+  weight_decay: 0.0001
+
+
+epoches: 400
+
+flat_epoch: 64
+no_aug_epoch: 12
+
+train_dataloader:
+  dataset:
+    transforms:
+      policy:
+        epoch: [4, 64, 120]
+
+  collate_fn:
+    mixup_epochs: [4, 64]
+    stop_epoch: 120

@@ -1,0 +1,10 @@
+# Ablation: LP-DSI low-pass alignment on the CROMA teacher. Only the smoothed
+# band of the features (avg-pool 2x2, i.e. the Haar LL sub-band) is aligned;
+# speckle- and texture-dominated high-frequency responses are ignored.
+# Zero extra hyperparameters vs the cosine baseline.
+__include__: ['./rtv4_hgnetv2_s_ship_croma.yml']
+
+output_dir: ./outputs/rtv4_s_ship_lp
+
+RTv4Criterion:
+  distill_mode: lp

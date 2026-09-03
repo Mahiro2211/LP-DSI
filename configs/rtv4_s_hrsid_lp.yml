@@ -1,0 +1,20 @@
+# Ablation: LP-DSI low-pass alignment on the CROMA teacher. Only the smoothed
+# band of the features (avg-pool 2x2, i.e. the Haar LL sub-band) is aligned;
+# speckle- and texture-dominated high-frequency responses are ignored.
+# Zero extra hyperparameters vs the cosine baseline.
+__include__: ['./rtv4_hgnetv2_s_hrsid_croma.yml']
+
+output_dir: ./outputs/rtv4_s_hrsid_lp
+
+RTv4Criterion:
+  distill_mode: lp
+
+# Stage-2 EMA-search gating, scoped to this ablation only (the shared
+# hrsid_detection.yml falls back to the legacy defaults elsewhere).
+train_dataloader:
+  collate_fn:
+    ema_search_enabled: True
+    ema_search_patience: 5
+    ema_search_cooldown: 10
+    ema_search_min_decay: 0.9990
+    ema_search_max_refreshes: 6

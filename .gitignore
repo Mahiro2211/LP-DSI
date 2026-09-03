@@ -1,0 +1,47 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+
+# ---- IDE / editor ----
+.vscode/
+.idea/
+.zcode/
+
+# ---- Pretrained weights (download via links in configs / README) ----
+pretrain/
+*.pth
+*.pt
+*.safetensors
+*.onnx
+*.engine
+*.ckpt
+
+# ---- Training artifacts ----
+outputs/
+logs/
+wandb/
+*.tfevents.*
+*.log
+
+# ---- Datasets (place locally, not in repo) ----
+data/
+datasets/
+coco/
+COCO2017/
+
+# ---- Misc ----
+.DS_Store
+tmp/
